@@ -27,19 +27,17 @@ func init() {
 
 	httpRequestsTotal := prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-		Name: "http_requests_total",
-		Help: "Total number of HTTP requests.",
+			Name: "http_requests_total",
+			Help: "Total number of HTTP requests.",
 		},
 		[]string{"method", "path", "code"})
-	}
 
-	// TODO:
-	// Create the `httpRequestDuration` HistogramVec.
-	// - Name: "http_request_duration_seconds"
-	// - Help: "HTTP request duration in seconds."
-	// - Labels: "method", "path"
-	//
-	// Code goes here ...
+	httpRequestDuration := prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name: "http_request_duration_seconds",
+			Help: "HTTP request duration in seconds.",
+		},
+		[]string{"method", "path"})
 
 	log.Println("INFO: Registering metrics...")
 	// TODO:
