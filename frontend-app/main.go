@@ -25,13 +25,13 @@ var (
 func init() {
 	log.Printf("INFO: Initializing metrics")
 
-	// TODO:
-	// Create the `httpRequestsTotal` CounterVec.
-	// - Name: "http_requests_total"
-	// - Help: "Total number of HTTP requests."
-	// - Labels: "method", "path", "code"
-	//
-	// Code goes here ...
+	httpRequestsTotal := prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+		Name: "http_requests_total",
+		Help: "Total number of HTTP requests.",
+		},
+		[]string{"method", "path", "code"})
+	}
 
 	// TODO:
 	// Create the `httpRequestDuration` HistogramVec.
