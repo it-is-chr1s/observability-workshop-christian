@@ -74,10 +74,10 @@ data:
       scrape_interval: 15s
 
     remote_write:
-      - url: "<YOUR_REMOTE_WRITE_PUSH_URL>"
+      - url: "https://push.metrics.stackit4.argus.eu01.stackit.cloud/instances/476188df-92df-4035-bde6-f10917ba9720/api/v1/receive"
         basic_auth:
-          username: "<YOUR_OBSERVABILITY_API_USERNAME>"
-          password: "<YOUR_OBSERVABILITY_API_PASSWORD>"
+          username: ${API_USERNAME}
+          password: ${API_PASSWORD}
         queue_config:
           max_samples_per_send: 1000
           capacity: 2000
