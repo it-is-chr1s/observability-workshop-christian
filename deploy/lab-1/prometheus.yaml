@@ -74,7 +74,7 @@ data:
       scrape_interval: 15s
 
     remote_write:
-      - url: ${API_URL}
+      - url: ${API_PROMETHEUS_UI_URL}
         basic_auth:
           username: ${API_USERNAME}
           password: ${API_PASSWORD}
