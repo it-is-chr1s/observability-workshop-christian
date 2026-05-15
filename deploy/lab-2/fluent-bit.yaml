@@ -98,10 +98,10 @@ data:
       Name  loki
       Match *
       Host <LOGS_PUSH_URL_DOMAIN> (e.g.: logs.stackit3.argus.eu01.stackit.cloud)
-      Uri  /instances/<YOUR_INSTANCE_ID>/loki/api/v1/push
+      Uri  /instances/${API_INSTANCE_ID}/loki/api/v1/push
       Port  443
-      Http_User  <YOUR_OBSERVABILITY_API_USERNAME>
-      Http_Passwd  <YOUR_OBSERVABILITY_API_PASSWORD>
+      Http_User  ${API_USERNAME}
+      Http_Passwd  ${API_PASSWORD}
       TLS   On
       Retry_Limit 5
       Labels job=fluentbit

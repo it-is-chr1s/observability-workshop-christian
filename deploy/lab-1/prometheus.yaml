@@ -74,10 +74,10 @@ data:
       scrape_interval: 15s
 
     remote_write:
-      - url: "<YOUR_REMOTE_WRITE_PUSH_URL>"
+      - url: ${API_PROMETHEUS_UI_URL}
         basic_auth:
-          username: "<YOUR_OBSERVABILITY_API_USERNAME>"
-          password: "<YOUR_OBSERVABILITY_API_PASSWORD>"
+          username: ${API_USERNAME}
+          password: ${API_PASSWORD}
         queue_config:
           max_samples_per_send: 1000
           capacity: 2000

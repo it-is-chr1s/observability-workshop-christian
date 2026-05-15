@@ -8,6 +8,9 @@ TAG = latest
 
 .PHONY: cluster-up cluster-down build-apps load-apps deploy undeploy local-run local-stop clean
 
+-include .env
+export $(shell [ -f .env] && sed 's/=.*//' env)
+
 # Local Development
 local-run:
 	@echo "Starting Local Redis..."
@@ -48,9 +51,9 @@ deploy: load-apps
 	@echo "Deploying to Kubernetes..."
 	@kubectl apply -f deploy/kubernetes.yaml
 	@echo "Deploying Prometheus..."
-	@kubectl apply -f deploy/lab-1/
+	@envsubst < deploy/lab-1/prometheus.yaml | kubectl apply -f -
 	@echo "Deploying Fluent-Bit..."
-	@kubectl apply -f deploy/lab-2/
+	@envsubst < deploy/lab-2/fluent-bit.yaml | kubectl apply -f -
 	@echo "Applications deployed. Run 'kubectl get pods' to check status."
 
 undeploy:

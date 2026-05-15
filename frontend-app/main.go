@@ -26,14 +26,8 @@ var (
 )
 
 func init() {
-	// TODO:
-	// Initialize the `logger` variable.
-	// 1. Create a `slog.NewJSONHandler` (writing to `os.Stdout`).
-	// 2. Create a `slog.New` logger using this handler.
-	// 3. Add a permanent attribute: .With("service", "frontend-app")
-	//
-	// Code goes here ...
-	//
+	jsonHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{})
+	logger = slog.New(jsonHandler).With("service", "frontend-app")
 
 	// TODO: Replace the old log line
 	log.Printf("INFO: Initializing metrics")
