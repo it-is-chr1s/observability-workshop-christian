@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"io"
-	"log"
 	"log/slog"
 	"net/http"
 	"os"
@@ -29,9 +28,7 @@ func init() {
 	jsonHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{})
 	logger = slog.New(jsonHandler).With("service", "frontend-app")
 
-	// TODO: Replace the old log line
-	log.Printf("INFO: Initializing metrics")
-	//
+	logger.Info("Initializing metrics")
 
 	httpRequestsTotal = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
@@ -50,14 +47,12 @@ func init() {
 		[]string{"method", "path"},
 	)
 
-	// TODO: Replace the old log line
-	log.Println("INFO: Registering metrics...")
-	//
+	logger.Info("Registering metrics...")
+
 	prometheus.MustRegister(httpRequestsTotal)
 	prometheus.MustRegister(httpRequestDuration)
-	// TODO: Replace the old log line
-	log.Println("INFO: Metrics successfully registered.")
-	//
+
+	logger.Info("Metrics successfully registered.")
 }
 
 type responseWriter struct {
@@ -95,28 +90,23 @@ func prometheusMiddleware(next http.Handler) http.Handler {
 func shortenHandler(w http.ResponseWriter, r *http.Request) {
 	longURL, err := io.ReadAll(r.Body)
 	if err != nil {
-		// TODO: Replace the old log line
-		//
-		log.Printf("ERROR: couldn't read request body: %v", err)
-		//
+		logger.Error("Could not read request body", "error", err)
+
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
 	resp, err := http.Post(backendServiceURL+"/generate", "text/plain", bytes.NewReader(longURL))
 	if err != nil {
-		// TODO: Replace the old log line
-		//
-		log.Printf("ERROR: Backend connection failed: %v", err)
-		//
+		logger.Error("Backend connection failed", "error", err)
+
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 	shortLink, _ := io.ReadAll(resp.Body)
-	// TODO: Replace the old log line
-	//
-	log.Printf("INFO: Link shortened: %s -> %s", string(longURL), string(shortLink))
-	//
+
+	logger.Info("Link shortened", "long_url", string(longURL), "short_link", string(shortLink))
+
 	w.Write(append(shortLink, '\n'))
 }
 
@@ -126,29 +116,22 @@ func redirectHandler(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := http.Get(backendServiceURL + "/resolve/" + shortLink)
 	if err != nil {
-		// TODO: Replace the old log line
-		//
-		log.Printf("ERROR: Backend connection failed: %v", err)
-		//
+		logger.Error("Backend connection failed", "error", err)
+
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
 	if resp.StatusCode == http.StatusNotFound {
-		// TODO: No log.Printf here, but add a WARN log to log "Link not found"
-		// Add `shortLink` as an attribute.
-		//
-		// Code goes here ...
-		//
+		logger.Warn("Link not found", "short_link", shortLink)
 		http.NotFound(w, r)
 		return
 	}
 
 	longURL, _ := io.ReadAll(resp.Body)
-	// TODO: Replace the old log line
-	//
-	log.Printf("INFO: Redirect: %s -> %s", shortLink, string(longURL))
-	//
+
+	logger.Info("Redirect", "short_link", shortLink, "long_url", string(longURL))
+
 	http.Redirect(w, r, string(longURL), http.StatusFound)
 }
 
@@ -157,10 +140,7 @@ func main() {
 	if backendServiceURL == "" {
 		backendServiceURL = "http://backend-app-svc:8081"
 	}
-	// TODO: Replace the old log line
-	//
-	log.Printf("INFO: Backend-Service URL on: %s", backendServiceURL)
-	//
+	logger.Info("Backend-Service URL", "url", backendServiceURL)
 
 	r := mux.NewRouter()
 	r.HandleFunc("/shorten", shortenHandler).Methods("POST")
@@ -170,19 +150,16 @@ func main() {
 	go func() {
 		metricsRouter := mux.NewRouter()
 		metricsRouter.Handle("/metrics", promhttp.Handler())
-		// TODO: Replace the old log line
-		//
-		log.Println("INFO: Metrics server started on Port 9090")
-		//
+
+		logger.Info("Metrics server started", "Port", 9090)
+
 		if err := http.ListenAndServe(":9090", metricsRouter); err != nil {
-			// TODO: Replace the old log line and exit with a non zero status code after it
-			log.Fatalf("FATAL: Couldn't start metrics server: %v", err)
+			logger.Error("Metrics server failed", "error", err)
+			os.Exit(1)
 		}
 	}()
 
-	// TODO: Replace the old log line
-	//
-	log.Println("INFO: Frontend-Service starting on Port 8080")
-	//
+	logger.Info("Frontend-Service starting", "Port", 8080)
+
 	http.ListenAndServe(":8080", r)
 }
