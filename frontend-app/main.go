@@ -20,6 +20,8 @@ var (
 	// Define metric variables globally
 	httpRequestsTotal   *prometheus.CounterVec
 	httpRequestDuration *prometheus.HistogramVec
+
+	req *prometheus.Registry
 )
 
 func init() {
@@ -40,7 +42,7 @@ func init() {
 		[]string{"method", "path"})
 
 	log.Println("INFO: Registering metrics...")
-	req := prometheus.NewRegistry()
+	req = prometheus.NewRegistry()
 	req.MustRegister(httpRequestsTotal)
 	req.MustRegister(httpRequestDuration)
 	log.Println("INFO: Metrics successfully registered.")
@@ -151,7 +153,7 @@ func main() {
 	// (This part is provided for you. No changes needed.)
 	go func() {
 		metricsRouter := mux.NewRouter()
-		metricsRouter.Handle("/metrics", promhttp.Handler())
+		metricsRouter.Handle("/metrics", promhttp.HandlerFor(req, promhttp.HandlerOpts{}))
 		log.Println("INFO: Metrics server started on Port 9090")
 		if err := http.ListenAndServe(":9090", metricsRouter); err != nil {
 			log.Fatalf("FATAL: Couldn't start metrics server: %v", err)
