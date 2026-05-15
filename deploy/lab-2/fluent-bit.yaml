@@ -97,7 +97,7 @@ data:
     [OUTPUT]
       Name  loki
       Match *
-      Host <LOGS_PUSH_URL_DOMAIN> (e.g.: logs.stackit3.argus.eu01.stackit.cloud)
+      Host ${API_LOGS_PUSH_URL_DOMAIN}
       Uri  /instances/${API_INSTANCE_ID}/loki/api/v1/push
       Port  443
       Http_User  ${API_USERNAME}

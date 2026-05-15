@@ -9,7 +9,7 @@ TAG = latest
 .PHONY: cluster-up cluster-down build-apps load-apps deploy undeploy local-run local-stop clean
 
 -include .env
-export $(shell [ -f .env] && sed 's/=.*//' env)
+export $(shell [ -f .env ] && sed 's/=.*//' .env)
 
 # Local Development
 local-run:
@@ -53,7 +53,7 @@ deploy: load-apps
 	@echo "Deploying Prometheus..."
 	@envsubst < deploy/lab-1/prometheus.yaml | kubectl apply -f -
 	@echo "Deploying Fluent-Bit..."
-	@envsubst < deploy/lab-2/fluent-bit.yaml | kubectl apply -f -
+	@envsubst '$$API_LOGS_PUSH_URL_DOMAIN $$API_INSTANCE_ID $$API_USERNAME $$API_PASSWORD' < deploy/lab-2/fluent-bit.yaml | kubectl apply -f -
 	@echo "Applications deployed. Run 'kubectl get pods' to check status."
 
 undeploy:
