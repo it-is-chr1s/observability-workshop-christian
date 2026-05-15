@@ -20,7 +20,6 @@ var (
 	httpRequestsTotal   *prometheus.CounterVec
 	httpRequestDuration *prometheus.HistogramVec
 
-	// Define global logger
 	logger *slog.Logger
 )
 
