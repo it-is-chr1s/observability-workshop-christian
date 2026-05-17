@@ -8,6 +8,9 @@ TAG = latest
 
 .PHONY: cluster-up cluster-down build-apps load-apps deploy undeploy local-run local-stop clean
 
+-include .env
+export $(shell [ -f .env ] && sed 's/=.*//' .env)
+
 # Local Development (No Kubernetes)
 local-run:
 	@echo "Starting Local Redis & Jaeger..."
@@ -50,10 +53,10 @@ deploy: load-apps
 	@echo "Deploying to Kubernetes..."
 	@kubectl apply -f deploy/kubernetes.yaml
 	@echo "Deploying Prometheus & Fluent-Bit..."
-	@kubectl apply -f deploy/lab-1/
-	@kubectl apply -f deploy/lab-2/
+	@envsubst < deploy/lab-1/prometheus.yaml | kubectl apply -f -
+	@envsubst '$$API_LOGS_PUSH_URL_DOMAIN $$API_INSTANCE_ID $$API_USERNAME $$API_PASSWORD' < deploy/lab-2/fluent-bit.yaml | kubectl apply -f -
 	@echo "Deploying OTel Collector..."
-	@kubectl apply -f deploy/lab-3/
+	@envsubst '$$API_OTEL_HTTP_URL $$API_USERNAME_PASSWORD_BASE64' < deploy/lab-3/otel-collector.yaml | kubectl apply -f -
 	@echo "Applications deployed. Run 'kubectl get pods' to check status."
 
 undeploy:

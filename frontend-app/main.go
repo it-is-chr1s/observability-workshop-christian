@@ -27,16 +27,7 @@ var (
 	httpRequestsTotal   *prometheus.CounterVec
 	httpRequestDuration *prometheus.HistogramVec
 
-	// TODO: Define a global OTel HTTP Client
-	// Right now, we are using Go's default HTTP client to call the backend.
-	// This default client doesn't know anything about tracing.
-	//
-	// We need to define a new, global `*http.Client` variable here.
-	// This client must be trace-aware, so it automatically sends
-	// trace information (like Trace IDs) to any service it calls.
-	//
-	// Code goes here ...
-	//
+	otelHttpClient *http.Client
 )
 
 func init() {
@@ -61,22 +52,14 @@ func init() {
 	prometheus.MustRegister(httpRequestsTotal)
 	prometheus.MustRegister(httpRequestDuration)
 
-	// TODO: Initialize OTel
-	// Call the `initTracerProvider` function (from tracing.go)
-	// to set up the OTel SDK.
-	//
-	// Also, get a global `Tracer` instance from OpenTelemetry's
-	// global provider, so we can create manual spans later if needed.
-	//
-	// Code goes here ...
-	//
+	if _, err := initTracerProvider(logger); err != nil {
+		logger.Error("Failed to initialize OTel TracerProvider", "error", err)
+	}
+	tracer = otel.Tracer("frontend-app-tracer")
 
-	// TODO: (continued)
-	// Now that the OTel SDK is initialized,
-	// create the actual instrumented HTTP client you defined globally above.
-	//
-	// Code goes here ...
-	//
+	otelHttpClient = &http.Client{
+		Transport: otelhttp.NewTransport(http.DefaultTransport),
+	}
 }
 
 type responseWriter struct {
@@ -118,18 +101,14 @@ func shortenHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Use the OTel HTTP Client
-	// Replace the default `http.Post` call below.
-	//
-	// Use your new, trace-aware http-client to send this request
-	// to the backend.
-	//
-	// **Crucially**: You must pass the `context` from the incoming
-	// request (`r`) to the *new* outgoing request. This is the "magic"
-	// that connects the two services in a single trace.
-	//
-	resp, err := http.Post(backendServiceURL+"/generate", "text/plain", bytes.NewBuffer(longURL))
-	//
+	ctx := r.Context()
+	req, err := http.NewRequestWithContext(ctx, "POST", backendServiceURL+"/generate", bytes.NewBuffer(longURL))
+	if err != nil {
+		logger.Error("Failed to create backend request", "error", err)
+		http.Error(w, "Internal error in frontent-app", http.StatusInternalServerError)
+		return
+	}
+	resp, err := otelHttpClient.Do(req)
 
 	if err != nil {
 		logger.Error("Backend call failed", "error", err)
@@ -147,17 +126,14 @@ func redirectHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	shortLink := vars["shortlink"]
 
-	// TODO: (continued)
-	// Do the same as in `shortenHandler`.
-	//
-	// Replace the default `http.Get` call below with a call
-	// using your `otelHttpClient`.
-	//
-	// Remember to pass the `context` from the incoming request (`r`)
-	// to the new outgoing request.
-	//
-	resp, err := http.Get(backendServiceURL + "/resolve/" + shortLink)
-	//
+	ctx := r.Context()
+	req, err := http.NewRequestWithContext(ctx, "GET", backendServiceURL+"/resolve/"+shortLink, nil)
+	if err != nil {
+		logger.Error("Failed to create backend request", "error", err)
+		http.Error(w, "Internal error in frontent-app", http.StatusInternalServerError)
+		return
+	}
+	resp, err := otelHttpClient.Do(req)
 
 	if err != nil {
 		logger.Error("Backend call failed", "error", err)
@@ -187,15 +163,7 @@ func main() {
 	r.HandleFunc("/shorten", shortenHandler).Methods("POST")
 	r.HandleFunc("/{shortlink}", redirectHandler).Methods("GET")
 
-	// TODO: Add OTel Middleware
-	// Our router `r` is "dumb" and doesn't know about traces.
-	//
-	// We need to apply a middleware to the router that
-	// automatically creates a new trace span for every
-	// incoming request.
-	//
-	// Code goes here ...
-	//
+	r.Use(otelmux.Middleware("frontend-router"))
 
 	r.Use(prometheusMiddleware)
 

@@ -64,9 +64,9 @@ data:
 
     exporters:
       otlphttp:
-        endpoint: "<YOUR_OBSERVABILITY_OTEL_HTTP_URL>"
+        endpoint: "${API_OTEL_HTTP_URL}"
         headers:
-          authorization: "Basic <YOUR_BASE64_ENCODED_OBSERVABILITY_USER_AND_PASSWORD>"
+          authorization: "Basic ${API_USERNAME_PASSWORD_BASE64}"
         tls:
           insecure: false
 
